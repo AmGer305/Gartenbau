@@ -751,9 +751,11 @@ function refreshTagesplan() {
                   <span class="status-badge status-${sc}" style="margin-left:0.5rem;">${si} ${st}</span>
                 </div>
                 <div class="sg-task-actions">
-                  <button class="btn btn-primary btn-small" onclick="setStatus(${t.taskId},'${esc(name)}','aktiv');refreshTagesplan()">▶</button>
-                  <button class="btn btn-secondary btn-small" onclick="setStatus(${t.taskId},'${esc(name)}','fertig');refreshTagesplan()">✓</button>
-                  ${weiterBtn}
+                  ${t.status === 'fertig'
+                    ? `<button class="btn btn-secondary btn-small" onclick="setStatus(${t.taskId},'${esc(name)}','offen');refreshTagesplan()">↩ Zurück</button>`
+                    : `<button class="btn btn-primary btn-small" onclick="setStatus(${t.taskId},'${esc(name)}','aktiv');refreshTagesplan()">▶</button>
+                       <button class="btn btn-secondary btn-small" onclick="setStatus(${t.taskId},'${esc(name)}','fertig');refreshTagesplan()">✓</button>
+                       ${weiterBtn}`}
                 </div>
               </div>`;
             }).join('')}
