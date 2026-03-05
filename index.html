@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Praxistag Gartenbau</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --soil: #3d2b1f;
+    --soil-light: #5c4033;
+    --leaf: #4a7c59;
+    --leaf-dark: #2d5a3a;
+    --leaf-light: #6b9e7a;
+    --moss: #8fbc8f;
+    --moss-light: #c8e6c0;
+    --sand: #f5f0e8;
+    --sand-warm: #ede4d3;
+    --cream: #faf8f4;
+    --bark: #8b7355;
+    --sun: #daa520;
+    --red-soft: #c45c4a;
+    --text: #2c2416;
+    --text-light: #6b5e4f;
+    --shadow: rgba(61, 43, 31, 0.12);
+    --shadow-deep: rgba(61, 43, 31, 0.25);
+    --b1: #4a7c59;
+    --b2: #daa520;
+    --b3: #5c6bc0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; }
+
+  header {
+    background: linear-gradient(135deg, var(--soil) 0%, var(--soil-light) 50%, var(--leaf-dark) 100%);
+    color: var(--sand); padding: 1.2rem 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 4px 20px var(--shadow-deep);
+    position: sticky; top: 0; z-index: 100;
+  }
+
+  header h1 {
+    font-family: 'DM Serif Display', serif; font-size: 1.8rem;
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+
+  .date-display { font-size: 0.95rem; opacity: 0.85; font-weight: 500; }
+
+  .tabs {
+    display: flex; background: var(--sand-warm);
+    border-bottom: 2px solid var(--moss-light); padding: 0 1rem;
+  }
+
+  .tab {
+    padding: 0.9rem 1.8rem; font-size: 1.05rem; font-weight: 600;
+    cursor: pointer; border: none; background: transparent;
+    color: var(--text-light); border-bottom: 3px solid transparent;
+    transition: all 0.2s ease; font-family: inherit;
+  }
+
+  .tab:hover { color: var(--leaf-dark); background: rgba(74, 124, 89, 0.06); }
+  .tab.active { color: var(--leaf-dark); border-bottom-color: var(--leaf); background: rgba(74, 124, 89, 0.08); }
+
+  main { padding: 1.5rem 2rem 3rem; max-width: 1200px; margin: 0 auto; }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .card {
+    background: white; border-radius: 12px;
+    box-shadow: 0 2px 12px var(--shadow); padding: 1.5rem;
+    margin-bottom: 1.2rem; border: 1px solid rgba(143, 188, 143, 0.2);
+    animation: fadeIn 0.3s ease;
+  }
+
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .card-title { font-family: 'DM Serif Display', serif; font-size: 1.3rem; color: var(--soil); }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.55rem 1.2rem; border-radius: 8px; border: none;
+    font-family: inherit; font-size: 0.95rem; font-weight: 600;
+    cursor: pointer; transition: all 0.15s ease;
+  }
+
+  .btn-primary { background: var(--leaf); color: white; }
+  .btn-primary:hover { background: var(--leaf-dark); }
+  .btn-secondary { background: var(--sand-warm); color: var(--soil); border: 1px solid var(--bark); }
+  .btn-secondary:hover { background: var(--sand); }
+  .btn-small { padding: 0.35rem 0.8rem; font-size: 0.85rem; }
+  .btn-danger { background: var(--red-soft); color: white; }
+  .btn-danger:hover { background: #b04a3a; }
+  .btn-sun { background: var(--sun); color: white; }
+  .btn-sun:hover { background: #c49518; }
+  .btn-b3 { background: var(--b3); color: white; }
+  .btn-icon { width: 36px; height: 36px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 1.1rem; }
+
+  .schueler-input-group { display: flex; gap: 0.4rem; margin-bottom: 1rem; }
+
+  .schueler-input-group input {
+    padding: 0.5rem 0.9rem; border: 2px solid var(--moss-light);
+    border-radius: 8px; font-size: 1rem; font-family: inherit; width: 220px;
+  }
+
+  .schueler-input-group input:focus { outline: none; border-color: var(--leaf); }
+
+  .schueler-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0.6rem;
+  }
+
+  .schueler-card {
+    position: relative; padding: 0.8rem 1rem;
+    background: var(--sand); border: 2px solid var(--moss-light);
+    border-radius: 10px; cursor: pointer; transition: all 0.15s; text-align: center;
+  }
+
+  .schueler-card:hover { border-color: var(--leaf); background: var(--moss-light); transform: translateY(-1px); }
+  .schueler-card.has-tasks { background: #e8f4e8; border-color: var(--leaf-light); }
+  .schueler-card .name { font-weight: 600; font-size: 1.05rem; color: var(--soil); }
+  .schueler-card .task-count { font-size: 0.8rem; color: var(--text-light); margin-top: 0.2rem; }
+
+  .schueler-card .remove-student {
+    position: absolute; top: 4px; right: 6px;
+    background: none; border: none; color: var(--text-light);
+    cursor: pointer; font-size: 1rem; opacity: 0.4; line-height: 1;
+  }
+  .schueler-card .remove-student:hover { opacity: 1; color: var(--red-soft); }
+
+  /* ─── TASK TABLE ─── */
+  .task-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+
+  .task-table thead th {
+    background: var(--sand-warm); padding: 0.7rem 1rem; text-align: left;
+    font-weight: 600; font-size: 0.9rem; color: var(--soil-light);
+    text-transform: uppercase; letter-spacing: 0.04em;
+    border-bottom: 2px solid var(--moss-light);
+  }
+
+  .task-table thead th:first-child { border-radius: 8px 0 0 0; }
+  .task-table thead th:last-child { border-radius: 0 8px 0 0; }
+
+  .task-table tbody td {
+    padding: 0.7rem 1rem; border-bottom: 1px solid rgba(143, 188, 143, 0.15);
+    vertical-align: middle; font-size: 0.95rem;
+  }
+
+  .task-table tbody tr:hover { background: rgba(143, 188, 143, 0.06); }
+  .task-nr { font-weight: 700; color: var(--leaf-dark); font-size: 0.85rem; width: 40px; text-align: center; }
+  .task-name { font-weight: 500; }
+
+  .assign-chip {
+    display: inline-flex; align-items: center; gap: 0.25rem;
+    padding: 0.25rem 0.6rem; background: var(--leaf); color: white;
+    border-radius: 14px; font-size: 0.85rem; font-weight: 500; margin: 0.1rem;
+  }
+
+  .assign-chip .remove { cursor: pointer; opacity: 0.7; font-size: 0.9rem; }
+  .assign-chip .remove:hover { opacity: 1; }
+
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600;
+  }
+
+  .status-offen { background: var(--sand-warm); color: var(--text-light); }
+  .status-aktiv { background: #e8f4e8; color: var(--leaf-dark); }
+  .status-fertig { background: #e0f2f1; color: #00796b; }
+
+  /* ─── TAGESPLAN: Student-grouped ─── */
+  .student-group {
+    background: white; border-radius: 12px;
+    box-shadow: 0 2px 12px var(--shadow);
+    border: 1px solid rgba(143, 188, 143, 0.2);
+    margin-bottom: 0.8rem; overflow: hidden;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .student-group-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.9rem 1.2rem; cursor: pointer;
+    background: var(--sand); transition: background 0.15s;
+    user-select: none;
+  }
+
+  .student-group-header:hover { background: var(--sand-warm); }
+
+  .student-group-header .sg-left {
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+
+  .sg-arrow {
+    font-size: 0.8rem; color: var(--text-light);
+    transition: transform 0.2s ease;
+    display: inline-block;
+  }
+
+  .sg-arrow.open { transform: rotate(90deg); }
+
+  .sg-name { font-weight: 700; font-size: 1.1rem; color: var(--soil); }
+
+  .sg-summary {
+    font-size: 0.85rem; color: var(--text-light); font-weight: 500;
+  }
+
+  .student-group-body {
+    display: none; padding: 0 1.2rem 1rem;
+  }
+
+  .student-group-body.open { display: block; }
+
+  .sg-block-section { margin-top: 0.8rem; }
+
+  .sg-block-label {
+    font-size: 0.8rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; padding: 0.3rem 0.6rem;
+    border-radius: 6px; display: inline-block; margin-bottom: 0.4rem; color: white;
+  }
+
+  .sg-block-label[data-block="1"] { background: var(--b1); }
+  .sg-block-label[data-block="2"] { background: var(--b2); }
+  .sg-block-label[data-block="3"] { background: var(--b3); }
+
+  .sg-task-card {
+    background: var(--cream); border-radius: 8px;
+    padding: 0.6rem 0.8rem; margin-bottom: 0.4rem;
+    display: flex; align-items: center; justify-content: space-between;
+    border-left: 3px solid transparent;
+  }
+
+  .sg-task-card[data-block="1"] { border-left-color: var(--b1); }
+  .sg-task-card[data-block="2"] { border-left-color: var(--b2); }
+  .sg-task-card[data-block="3"] { border-left-color: var(--b3); }
+
+  .sg-task-name { font-size: 0.95rem; font-weight: 500; }
+
+  .sg-task-actions { display: flex; gap: 0.3rem; }
+  .sg-task-actions .btn { font-size: 0.78rem; padding: 0.25rem 0.55rem; }
+
+  /* Block query buttons row */
+  .block-query-bar {
+    display: flex; gap: 0.6rem; margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+
+  /* ─── MODALS ─── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(44, 36, 22, 0.5); z-index: 200;
+    align-items: center; justify-content: center;
+  }
+
+  .modal-overlay.show { display: flex; }
+
+  .modal {
+    background: white; border-radius: 16px; padding: 1.8rem;
+    max-width: 500px; width: 90%;
+    box-shadow: 0 12px 40px var(--shadow-deep);
+    max-height: 85vh; overflow-y: auto;
+  }
+
+  .modal h3 { font-family: 'DM Serif Display', serif; font-size: 1.3rem; margin-bottom: 0.5rem; color: var(--soil); }
+  .modal-subtitle { font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem; }
+
+  .modal-task-list {
+    display: flex; flex-direction: column; gap: 0.4rem;
+    max-height: 50vh; overflow-y: auto; margin-bottom: 1rem;
+  }
+
+  .modal-task-btn {
+    padding: 0.7rem 1rem; background: var(--sand);
+    border: 2px solid var(--moss-light); border-radius: 8px;
+    font-size: 1rem; font-weight: 500; cursor: pointer;
+    text-align: left; font-family: inherit; transition: all 0.15s;
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+
+  .modal-task-btn:hover { background: var(--moss-light); border-color: var(--leaf); }
+
+  .nr-badge {
+    background: var(--leaf); color: white;
+    font-size: 0.75rem; font-weight: 700;
+    padding: 0.15rem 0.45rem; border-radius: 5px;
+    min-width: 28px; text-align: center;
+  }
+
+  .current-assignments {
+    margin-bottom: 1rem; padding: 0.8rem;
+    background: var(--sand); border-radius: 8px;
+  }
+
+  .current-assignments h4 {
+    font-size: 0.85rem; color: var(--text-light);
+    text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.5rem;
+  }
+
+  .ca-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.4rem 0; border-bottom: 1px solid rgba(143,188,143,0.15);
+    font-size: 0.9rem;
+  }
+
+  .ca-item:last-child { border-bottom: none; }
+
+  .block-mini {
+    display: inline-block; padding: 0.1rem 0.35rem;
+    border-radius: 4px; font-size: 0.7rem; font-weight: 700;
+    color: white; margin-left: 0.3rem;
+  }
+
+  .block-mini[data-b="1"] { background: var(--b1); }
+  .block-mini[data-b="2"] { background: var(--b2); }
+  .block-mini[data-b="3"] { background: var(--b3); }
+
+  .admin-bar {
+    display: flex; gap: 0.6rem; flex-wrap: wrap;
+    margin-bottom: 1.2rem; padding: 1rem;
+    background: var(--sand-warm); border-radius: 10px; border: 1px dashed var(--bark);
+  }
+
+  @media (max-width: 768px) {
+    header { padding: 1rem; }
+    header h1 { font-size: 1.3rem; }
+    main { padding: 1rem; }
+    .tab { padding: 0.7rem 1rem; font-size: 0.95rem; }
+    .schueler-input-group input { width: 150px; }
+    .schueler-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  }
+
+  @media print {
+    header, .tabs, .admin-bar, .schueler-input-group, .btn, .remove-student, .sg-task-actions, .block-query-bar { display: none !important; }
+    .view { display: block !important; }
+    .card, .student-group { box-shadow: none; border: 1px solid #ccc; }
+    .student-group-body { display: block !important; }
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span>🌱</span> Praxistag Gartenbau</h1>
+  <span class="date-display" id="dateDisplay"></span>
+</header>
+
+<div class="tabs">
+  <button class="tab active" data-view="aufgaben">📋 Aufgaben</button>
+  <button class="tab" data-view="tagesplan">📅 Tagesplan</button>
+  <button class="tab" data-view="admin">⚙️ Verwaltung</button>
+</div>
+
+<main>
+
+  <!-- ═══ AUFGABEN ═══ -->
+  <div class="view active" id="view-aufgaben">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">👥 Schüler*innen — zum Zuweisen anklicken</h2>
+      </div>
+      <div class="schueler-input-group">
+        <input type="text" id="schuelerInput" placeholder="Name eingeben…" onkeydown="if(event.key==='Enter') addSchueler()">
+        <button class="btn btn-primary" onclick="addSchueler()">+ Hinzufügen</button>
+      </div>
+      <div class="schueler-grid" id="schuelerGrid"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">🌿 Aufgabenübersicht</h2>
+        <span style="font-size:0.85rem;color:var(--text-light)" id="taskCounter"></span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="task-table">
+          <thead>
+            <tr>
+              <th style="width:40px">Nr</th>
+              <th>Aufgabe</th>
+              <th style="width:220px">Zugewiesen an</th>
+              <th style="width:80px">Status</th>
+            </tr>
+          </thead>
+          <tbody id="taskBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TAGESPLAN ═══ -->
+  <div class="view" id="view-tagesplan">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.8rem;">
+      <h2 class="card-title" style="font-size:1.4rem;">📅 Tagesstruktur</h2>
+      <div class="block-query-bar">
+        <button class="btn btn-primary btn-small" onclick="blockAbfrage(1)">🔔 Block 1 Abfrage</button>
+        <button class="btn btn-sun btn-small" onclick="blockAbfrage(2)">🔔 Block 2 Abfrage</button>
+        <button class="btn btn-b3 btn-small" onclick="blockAbfrage(3)">🔔 Block 3 Abfrage</button>
+      </div>
+    </div>
+
+    <div id="tagesplanContent"></div>
+
+    <div class="card" id="unassignedCard" style="display:none;margin-top:0.5rem;">
+      <div class="card-header"><h2 class="card-title">⚠️ Noch ohne Aufgabe</h2></div>
+      <div id="unassignedList" style="display:flex;flex-wrap:wrap;gap:0.4rem;"></div>
+    </div>
+  </div>
+
+  <!-- ═══ ADMIN ═══ -->
+  <div class="view" id="view-admin">
+    <div class="card">
+      <div class="card-header"><h2 class="card-title">⚙️ Verwaltung</h2></div>
+      <div class="admin-bar">
+        <button class="btn btn-secondary" onclick="exportData()">📤 Daten sichern (JSON)</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📥 Daten importieren</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+        <button class="btn btn-primary" onclick="exportDaySummary()">📝 Tagesbericht exportieren</button>
+        <button class="btn btn-danger" onclick="clearDay()">🗑️ Heutigen Tag zurücksetzen</button>
+      </div>
+      <h3 style="margin:1.2rem 0 0.6rem;font-family:'DM Serif Display',serif;font-size:1.1rem;">Aufgaben bearbeiten</h3>
+      <p style="color:var(--text-light);font-size:0.9rem;margin-bottom:0.8rem;">Aufgaben hinzufügen, umbenennen oder entfernen.</p>
+      <div style="display:flex;gap:0.4rem;margin-bottom:1rem;">
+        <input type="text" id="newTaskInput" placeholder="Neue Aufgabe…"
+               style="flex:1;padding:0.5rem 0.9rem;border:2px solid var(--moss-light);border-radius:8px;font-size:1rem;font-family:inherit;"
+               onkeydown="if(event.key==='Enter') addTask()">
+        <button class="btn btn-primary" onclick="addTask()">+ Aufgabe</button>
+      </div>
+      <div id="adminTaskList"></div>
+    </div>
+  </div>
+</main>
+
+<!-- ═══ ASSIGN MODAL ═══ -->
+<div class="modal-overlay" id="assignModal">
+  <div class="modal">
+    <h3 id="assignModalTitle"></h3>
+    <div class="modal-subtitle">Aufgabe auswählen:</div>
+    <div class="current-assignments" id="currentAssignments" style="display:none;">
+      <h4>Bereits zugewiesen</h4>
+      <div id="currentAssignmentsList"></div>
+    </div>
+    <div class="modal-task-list" id="assignModalList"></div>
+    <button class="btn btn-secondary" onclick="closeModal()">Schließen</button>
+  </div>
+</div>
+
+<!-- ═══ BLOCK PICKER ═══ -->
+<div class="modal-overlay" id="blockPickerModal">
+  <div class="modal" style="max-width:420px;">
+    <h3 id="blockPickerTitle"></h3>
+    <div id="blockPickerContent"></div>
+  </div>
+</div>
+
+<!-- ═══ BLOCK QUERY ═══ -->
+<div class="modal-overlay" id="blockModal">
+  <div class="modal" style="max-width:600px;">
+    <h3 id="blockModalTitle"></h3>
+    <div id="blockModalContent"></div>
+    <div style="margin-top:1rem;display:flex;gap:0.5rem;justify-content:flex-end;">
+      <button class="btn btn-primary" onclick="closeBlockModal()">Fertig</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEFAULT_TASKS = [
+  "Nummern an den Kisten vorbereiten",
+  "Kompost auf die Beete packen",
+  "Grünkohl ernten + Erde im Beet erneuern",
+  "Insektenhotel: 3 Fächer neu machen (Regentag-Aufgabe)",
+  "Zweige abschneiden",
+  "Kräuterspirale: Blätter rausholen",
+  "Vogelfutter nachfüllen",
+  "Stroh in die Töpfe",
+  "Bäume beschriften",
+  "Eichhörnchen-Futter auffüllen",
+  "Efeu abschneiden",
+  "Zaun reparieren + entstehendes Beet harken",
+  "Neue Wiese anlegen",
+  "Hochbeet neben Kompost: harken + auffüllen",
+  "Alte Beete: neue Erde auffüllen",
+  "Altes Beet abreißen",
+  "Baumast absägen",
+  "Neue Erde auf ein Beet"
+];
+
+const BLOCKS = [
+  { nr: 1, start: "08:00", end: "09:30" },
+  { nr: 2, start: "10:00", end: "11:30" },
+  { nr: 3, start: "11:50", end: "13:20" }
+];
+
+let state = loadState();
+let openStudents = new Set(); // track which students are expanded in Tagesplan
+
+function defaultState() {
+  return {
+    tasks: DEFAULT_TASKS.map((name, i) => ({ id: i + 1, name, assignees: [] })),
+    schueler: [],
+    nextTaskId: DEFAULT_TASKS.length + 1
+  };
+}
+
+function loadState() {
+  try { const s = localStorage.getItem('praxistag-gartenbau'); if (s) return JSON.parse(s); } catch(e) {}
+  return defaultState();
+}
+
+function saveState() { localStorage.setItem('praxistag-gartenbau', JSON.stringify(state)); }
+
+function esc(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+
+// ─── TABS ───
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('view-' + tab.dataset.view).classList.add('active');
+    if (tab.dataset.view === 'tagesplan') refreshTagesplan();
+    if (tab.dataset.view === 'admin') renderAdminTasks();
+  });
+});
+
+// ─── DATE ───
+(function() {
+  document.getElementById('dateDisplay').textContent =
+    new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+})();
+
+// ═══════════════════════════════════════
+// SCHÜLER
+// ═══════════════════════════════════════
+
+function addSchueler() {
+  const input = document.getElementById('schuelerInput');
+  const name = input.value.trim();
+  if (!name || state.schueler.includes(name)) { input.value = ''; return; }
+  state.schueler.push(name);
+  input.value = '';
+  saveState(); renderSchueler(); renderTasks(); input.focus();
+}
+
+function removeSchueler(name, evt) {
+  evt.stopPropagation();
+  state.schueler = state.schueler.filter(s => s !== name);
+  state.tasks.forEach(t => { t.assignees = t.assignees.filter(a => a.name !== name); });
+  saveState(); renderSchueler(); renderTasks();
+}
+
+function studentTaskCount(name) {
+  return state.tasks.filter(t => t.assignees.some(a => a.name === name)).length;
+}
+
+function renderSchueler() {
+  const grid = document.getElementById('schuelerGrid');
+  if (state.schueler.length === 0) {
+    grid.innerHTML = '<span style="color:var(--text-light);font-size:0.9rem;padding:0.5rem;">Noch keine Schüler*innen eingetragen.</span>';
+    return;
+  }
+  grid.innerHTML = state.schueler.map(name => {
+    const c = studentTaskCount(name);
+    return `<div class="schueler-card${c > 0 ? ' has-tasks' : ''}" onclick="openAssignModal('${esc(name)}')">
+      <button class="remove-student" onclick="removeSchueler('${esc(name)}', event)" title="Entfernen">&times;</button>
+      <div class="name">${esc(name)}</div>
+      <div class="task-count">${c === 0 ? 'Keine Aufgaben' : c + ' Aufgabe' + (c > 1 ? 'n' : '')}</div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════
+// TASK TABLE (no blocks column)
+// ═══════════════════════════════════════
+
+function renderTasks() {
+  const tbody = document.getElementById('taskBody');
+  const counter = document.getElementById('taskCounter');
+  const assigned = state.tasks.filter(t => t.assignees.length > 0).length;
+  counter.textContent = `${assigned}/${state.tasks.length} zugewiesen`;
+
+  tbody.innerHTML = state.tasks.map(task => {
+    const chips = task.assignees.map(a =>
+      `<span class="assign-chip">${esc(a.name)}<span class="remove" onclick="unassign(${task.id},'${esc(a.name)}')">&times;</span></span>`
+    ).join('');
+
+    const sc = task.assignees.length === 0 ? 'offen'
+      : task.assignees.every(a => a.status === 'fertig') ? 'fertig'
+      : task.assignees.some(a => a.status === 'aktiv') ? 'aktiv' : 'offen';
+    const sl = sc === 'fertig' ? '✓ Fertig' : sc === 'aktiv' ? '▶ Aktiv' : '○ Offen';
+
+    return `<tr>
+      <td class="task-nr">${task.id}</td>
+      <td class="task-name">${esc(task.name)}</td>
+      <td>${chips || '<span style="color:var(--text-light);font-size:0.85rem;">—</span>'}</td>
+      <td><span class="status-badge status-${sc}">${sl}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════
+// ASSIGN MODAL (Student → Tasks, sorted by block)
+// ═══════════════════════════════════════
+
+let currentStudent = null;
+
+function openAssignModal(name) {
+  currentStudent = name;
+  document.getElementById('assignModalTitle').textContent = name;
+
+  // Current assignments, sorted by first block
+  const myTasks = [];
+  state.tasks.forEach(t => {
+    const a = t.assignees.find(a => a.name === name);
+    if (a) myTasks.push({ task: t, assignee: a });
+  });
+  myTasks.sort((a, b) => Math.min(...a.assignee.blocks) - Math.min(...b.assignee.blocks));
+
+  const curDiv = document.getElementById('currentAssignments');
+  const curList = document.getElementById('currentAssignmentsList');
+  if (myTasks.length > 0) {
+    curDiv.style.display = '';
+    curList.innerHTML = myTasks.map(({ task, assignee }) => {
+      const blockBadges = assignee.blocks.map(b =>
+        `<span class="block-mini" data-b="${b}">B${b}</span>`
+      ).join('');
+      return `<div class="ca-item">
+        <span>${esc(task.name)} ${blockBadges}</span>
+        <button class="btn btn-danger btn-small" style="padding:0.2rem 0.5rem;font-size:0.75rem;" onclick="unassignFromModal(${task.id},'${esc(name)}')">Entfernen</button>
+      </div>`;
+    }).join('');
+  } else {
+    curDiv.style.display = 'none';
+  }
+
+  // Available tasks
+  const available = state.tasks.filter(t => !t.assignees.some(a => a.name === name));
+  const list = document.getElementById('assignModalList');
+  if (available.length === 0) {
+    list.innerHTML = '<p style="color:var(--text-light);padding:0.5rem;">Alle Aufgaben bereits zugewiesen.</p>';
+  } else {
+    list.innerHTML = available.map(t =>
+      `<button class="modal-task-btn" onclick="pickTask(${t.id})">
+        <span class="nr-badge">${t.id}</span><span>${esc(t.name)}</span>
+      </button>`
+    ).join('');
+  }
+
+  document.getElementById('assignModal').classList.add('show');
+}
+
+function pickTask(taskId) {
+  closeModal();
+  const task = state.tasks.find(t => t.id === taskId);
+  document.getElementById('blockPickerTitle').textContent = `${currentStudent} → ${task.name}`;
+  document.getElementById('blockPickerContent').innerHTML = `
+    <p style="margin-bottom:0.8rem;color:var(--text-light);">In welchen Blöcken?</p>
+    <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem;">
+      ${BLOCKS.map(b => `
+        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;padding:0.7rem 1rem;border:2px solid var(--moss-light);border-radius:8px;font-size:1.05rem;font-weight:500;">
+          <input type="checkbox" value="${b.nr}" class="bp-check" checked style="width:18px;height:18px;">
+          Block ${b.nr}
+          <span style="font-size:0.85rem;color:var(--text-light);margin-left:auto;">${b.start} – ${b.end}</span>
+        </label>`).join('')}
+    </div>
+    <div style="display:flex;gap:0.5rem;">
+      <button class="btn btn-primary" onclick="confirmAssign(${taskId})">Zuweisen</button>
+      <button class="btn btn-secondary" onclick="closeBlockPicker();openAssignModal('${esc(currentStudent)}')">Zurück</button>
+    </div>`;
+  document.getElementById('blockPickerModal').classList.add('show');
+}
+
+function confirmAssign(taskId) {
+  const blocks = Array.from(document.querySelectorAll('.bp-check:checked')).map(c => parseInt(c.value));
+  if (blocks.length === 0) return;
+  state.tasks.find(t => t.id === taskId).assignees.push({ name: currentStudent, blocks, status: 'offen' });
+  saveState(); closeBlockPicker(); renderSchueler(); renderTasks();
+  openAssignModal(currentStudent);
+}
+
+function unassignFromModal(taskId, name) {
+  const t = state.tasks.find(t => t.id === taskId);
+  t.assignees = t.assignees.filter(a => a.name !== name);
+  saveState(); renderSchueler(); renderTasks(); openAssignModal(name);
+}
+
+function unassign(taskId, name) {
+  const t = state.tasks.find(t => t.id === taskId);
+  t.assignees = t.assignees.filter(a => a.name !== name);
+  saveState(); renderSchueler(); renderTasks();
+}
+
+function closeModal() { document.getElementById('assignModal').classList.remove('show'); }
+function closeBlockPicker() { document.getElementById('blockPickerModal').classList.remove('show'); }
+
+// ═══════════════════════════════════════
+// TAGESPLAN — grouped by student, collapsible
+// ═══════════════════════════════════════
+
+function getStudentSchedule() {
+  // Build: { studentName: { 1: [{task, status, taskId}], 2: [...], 3: [...] } }
+  const schedule = {};
+  state.schueler.forEach(name => { schedule[name] = { 1: [], 2: [], 3: [] }; });
+
+  state.tasks.forEach(task => {
+    task.assignees.forEach(a => {
+      if (!schedule[a.name]) schedule[a.name] = { 1: [], 2: [], 3: [] };
+      a.blocks.forEach(b => {
+        schedule[a.name][b].push({ taskName: task.name, taskId: task.id, status: a.status });
+      });
+    });
+  });
+
+  return schedule;
+}
+
+function refreshTagesplan() {
+  const schedule = getStudentSchedule();
+  const container = document.getElementById('tagesplanContent');
+
+  const assignedStudents = state.schueler.filter(name =>
+    schedule[name] && (schedule[name][1].length + schedule[name][2].length + schedule[name][3].length) > 0
+  );
+
+  if (assignedStudents.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--text-light);">Noch keine Aufgaben zugewiesen.</div>';
+  } else {
+    container.innerHTML = assignedStudents.map(name => {
+      const s = schedule[name];
+      const totalTasks = s[1].length + s[2].length + s[3].length;
+      const doneTasks = [...s[1], ...s[2], ...s[3]].filter(t => t.status === 'fertig').length;
+      const isOpen = openStudents.has(name);
+
+      let blockSections = '';
+      BLOCKS.forEach(block => {
+        const tasks = s[block.nr];
+        if (tasks.length === 0) return;
+        blockSections += `
+          <div class="sg-block-section">
+            <span class="sg-block-label" data-block="${block.nr}">Block ${block.nr} · ${block.start} – ${block.end}</span>
+            ${tasks.map(t => {
+              const sc = t.status === 'fertig' ? 'fertig' : t.status === 'aktiv' ? 'aktiv' : 'offen';
+              const si = t.status === 'fertig' ? '✓' : t.status === 'aktiv' ? '▶' : '○';
+              const st = t.status === 'fertig' ? 'Fertig' : t.status === 'aktiv' ? 'Aktiv' : 'Offen';
+              const nextB = block.nr < 3 ? block.nr + 1 : null;
+              const weiterBtn = nextB && t.status !== 'fertig'
+                ? `<button class="btn btn-secondary btn-small" onclick="moveNext(${t.taskId},'${esc(name)}',${block.nr},${nextB});refreshTagesplan()">→ Weiter</button>` : '';
+              return `<div class="sg-task-card" data-block="${block.nr}">
+                <div>
+                  <span class="sg-task-name">${esc(t.taskName)}</span>
+                  <span class="status-badge status-${sc}" style="margin-left:0.5rem;">${si} ${st}</span>
+                </div>
+                <div class="sg-task-actions">
+                  <button class="btn btn-primary btn-small" onclick="setStatus(${t.taskId},'${esc(name)}','aktiv');refreshTagesplan()">▶</button>
+                  <button class="btn btn-secondary btn-small" onclick="setStatus(${t.taskId},'${esc(name)}','fertig');refreshTagesplan()">✓</button>
+                  ${weiterBtn}
+                </div>
+              </div>`;
+            }).join('')}
+          </div>`;
+      });
+
+      return `<div class="student-group">
+        <div class="student-group-header" onclick="toggleStudent('${esc(name)}')">
+          <div class="sg-left">
+            <span class="sg-arrow${isOpen ? ' open' : ''}">▶</span>
+            <span class="sg-name">${esc(name)}</span>
+          </div>
+          <span class="sg-summary">${doneTasks}/${totalTasks} erledigt</span>
+        </div>
+        <div class="student-group-body${isOpen ? ' open' : ''}">
+          ${blockSections}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Unassigned
+  const allA = new Set();
+  state.tasks.forEach(t => t.assignees.forEach(a => allA.add(a.name)));
+  const un = state.schueler.filter(s => !allA.has(s));
+  const card = document.getElementById('unassignedCard');
+  if (un.length > 0) {
+    card.style.display = '';
+    document.getElementById('unassignedList').innerHTML = un.map(s =>
+      `<span style="display:inline-block;padding:0.35rem 0.7rem;background:#ffe0b2;border-radius:20px;font-size:0.9rem;font-weight:500;">${esc(s)}</span>`
+    ).join('');
+  } else { card.style.display = 'none'; }
+}
+
+function toggleStudent(name) {
+  if (openStudents.has(name)) openStudents.delete(name);
+  else openStudents.add(name);
+  refreshTagesplan();
+}
+
+function setStatus(taskId, name, status) {
+  const a = state.tasks.find(t => t.id === taskId).assignees.find(a => a.name === name);
+  if (a) a.status = status;
+  saveState();
+}
+
+function moveNext(taskId, name, curBlock, nextBlock) {
+  const a = state.tasks.find(t => t.id === taskId).assignees.find(a => a.name === name);
+  if (a && !a.blocks.includes(nextBlock)) { a.blocks.push(nextBlock); a.blocks.sort(); }
+  saveState();
+}
+
+// ─── BLOCK ABFRAGE ───
+function blockAbfrage(blockNr) {
+  const entries = [];
+  state.tasks.forEach(task => {
+    task.assignees.forEach(a => {
+      if (a.blocks.includes(blockNr) && a.status !== 'fertig')
+        entries.push({ student: a.name, task: task.name, taskId: task.id });
+    });
+  });
+
+  const b = BLOCKS.find(b => b.nr === blockNr);
+  document.getElementById('blockModalTitle').textContent = `🔔 Block ${blockNr} (${b.start} – ${b.end})`;
+  const content = document.getElementById('blockModalContent');
+  const nextB = blockNr < 3 ? blockNr + 1 : null;
+
+  if (entries.length === 0) {
+    content.innerHTML = '<p style="color:var(--text-light);">Alle Aufgaben in diesem Block sind erledigt! 🎉</p>';
+  } else {
+    content.innerHTML = entries.map(e => {
+      const weiterBtn = nextB
+        ? `<button class="btn btn-secondary btn-small" onclick="bqMove(${e.taskId},'${esc(e.student)}',${blockNr},${nextB})">→ Weiter</button>` : '';
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:0.7rem 0;border-bottom:1px solid var(--moss-light);">
+        <div><strong>${esc(e.student)}</strong> <span style="color:var(--text-light);font-size:0.9rem;">– ${esc(e.task)}</span></div>
+        <div style="display:flex;gap:0.3rem;">
+          <button class="btn btn-primary btn-small" onclick="bqDone(${e.taskId},'${esc(e.student)}',${blockNr})">✓ Fertig</button>
+          ${weiterBtn}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  document.getElementById('blockModal').classList.add('show');
+}
+
+function bqDone(taskId, name, blockNr) { setStatus(taskId, name, 'fertig'); saveState(); blockAbfrage(blockNr); refreshTagesplan(); }
+function bqMove(taskId, name, curBlock, nextBlock) { moveNext(taskId, name, curBlock, nextBlock); saveState(); blockAbfrage(curBlock); refreshTagesplan(); }
+function closeBlockModal() { document.getElementById('blockModal').classList.remove('show'); }
+
+// ═══════════════════════════════════════
+// ADMIN
+// ═══════════════════════════════════════
+
+function renderAdminTasks() {
+  document.getElementById('adminTaskList').innerHTML = state.tasks.map(t =>
+    `<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+      <span class="task-nr">${t.id}</span>
+      <input type="text" value="${esc(t.name)}"
+             style="flex:1;padding:0.4rem 0.7rem;border:1px solid var(--moss-light);border-radius:6px;font-family:inherit;font-size:0.95rem;"
+             onchange="renameTask(${t.id},this.value)">
+      <button class="btn btn-danger btn-small btn-icon" onclick="deleteTask(${t.id})" title="Löschen">✕</button>
+    </div>`
+  ).join('');
+}
+
+function addTask() {
+  const input = document.getElementById('newTaskInput');
+  const name = input.value.trim();
+  if (!name) return;
+  state.tasks.push({ id: state.nextTaskId++, name, assignees: [] });
+  input.value = ''; saveState(); renderAdminTasks(); renderTasks();
+}
+
+function renameTask(id, v) {
+  const t = state.tasks.find(t => t.id === id);
+  if (t) t.name = v.trim();
+  saveState(); renderTasks();
+}
+
+function deleteTask(id) {
+  if (!confirm('Aufgabe wirklich löschen?')) return;
+  state.tasks = state.tasks.filter(t => t.id !== id);
+  saveState(); renderAdminTasks(); renderTasks();
+}
+
+// ═══════════════════════════════════════
+// EXPORT / IMPORT
+// ═══════════════════════════════════════
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `praxistag-gartenbau-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const imp = JSON.parse(e.target.result);
+      if (imp.tasks) { state = imp; saveState(); renderAll(); alert('Daten erfolgreich importiert!'); }
+      else alert('Ungültiges Dateiformat.');
+    } catch(err) { alert('Fehler beim Import: ' + err.message); }
+  };
+  reader.readAsText(file); event.target.value = '';
+}
+
+// ─── DAY SUMMARY EXPORT ───
+function exportDaySummary() {
+  const today = new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const schedule = getStudentSchedule();
+  let text = `PRAXISTAG GARTENBAU — TAGESBERICHT\n`;
+  text += `${today}\n`;
+  text += `${'═'.repeat(50)}\n\n`;
+
+  state.schueler.forEach(name => {
+    const s = schedule[name];
+    if (!s) return;
+    const total = s[1].length + s[2].length + s[3].length;
+    if (total === 0) {
+      text += `${name}\n  Keine Aufgaben zugewiesen.\n\n`;
+      return;
+    }
+
+    text += `${name}\n`;
+    BLOCKS.forEach(block => {
+      const tasks = s[block.nr];
+      if (tasks.length === 0) return;
+      text += `  Block ${block.nr} (${block.start} – ${block.end}):\n`;
+      tasks.forEach(t => {
+        const status = t.status === 'fertig' ? '✓' : t.status === 'aktiv' ? '▶' : '○';
+        text += `    ${status} ${t.taskName}\n`;
+      });
+    });
+    text += '\n';
+  });
+
+  // Unassigned
+  const allA = new Set();
+  state.tasks.forEach(t => t.assignees.forEach(a => allA.add(a.name)));
+  const un = state.schueler.filter(s => !allA.has(s));
+  if (un.length > 0) {
+    text += `OHNE AUFGABE:\n  ${un.join(', ')}\n\n`;
+  }
+
+  // Unassigned tasks
+  const unTasks = state.tasks.filter(t => t.assignees.length === 0);
+  if (unTasks.length > 0) {
+    text += `NICHT ZUGEWIESENE AUFGABEN:\n`;
+    unTasks.forEach(t => { text += `  - ${t.name}\n`; });
+  }
+
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `tagesbericht-${new Date().toISOString().slice(0,10)}.txt`;
+  a.click();
+}
+
+function clearDay() {
+  if (!confirm('Alle Zuweisungen und Schüler*innen für heute löschen?')) return;
+  state.schueler = [];
+  state.tasks.forEach(t => { t.assignees = []; });
+  saveState(); renderAll();
+}
+
+function renderAll() { renderSchueler(); renderTasks(); }
+
+// Close modals on background click
+['assignModal', 'blockPickerModal', 'blockModal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', e => {
+    if (e.target === document.getElementById(id)) document.getElementById(id).classList.remove('show');
+  });
+});
+
+renderAll();
+</script>
+</body>
+</html>
