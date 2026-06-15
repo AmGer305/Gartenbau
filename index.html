@@ -122,9 +122,10 @@
   .schueler-card .task-count { font-size: 0.8rem; color: var(--text-light); margin-top: 0.2rem; }
 
   .schueler-card .remove-student {
-    position: absolute; top: 4px; right: 6px;
+    position: absolute; top: 0; right: 0;
     background: none; border: none; color: var(--text-light);
     cursor: pointer; font-size: 1rem; opacity: 0.4; line-height: 1;
+    padding: 8px 10px; /* größere Trefffläche für Touch */
   }
   .schueler-card .remove-student:hover { opacity: 1; color: var(--red-soft); }
 
@@ -330,12 +331,104 @@
 
   @media print {
     header, .tabs, .admin-bar, .schueler-input-group, .btn, .remove-student, .sg-task-actions, .block-query-bar { display: none !important; }
-    .view { display: block !important; }
+    .bericht-card, .bericht-head, .farb-dot, .farb-swatch {
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    /* Auf der Berichte-Ansicht: nur die Karten drucken */
+    body:has(#view-berichte.active) .view { display: none !important; }
+    body:has(#view-berichte.active) #view-berichte { display: block !important; }
     .card, .student-group { box-shadow: none; border: 1px solid #ccc; }
     .student-group-body { display: block !important; }
   }
 
   @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ─── SCHWIERIGKEIT ─── */
+  .level-badge { margin-left: 0.35rem; font-size: 0.95em; }
+
+  .level-select { display: flex; gap: 2px; flex-shrink: 0; }
+  .level-btn {
+    border: 1px solid var(--moss-light); background: white;
+    border-radius: 6px; padding: 0.25rem 0.45rem;
+    cursor: pointer; opacity: 0.4; font-size: 0.95rem;
+    transition: opacity 0.1s ease;
+  }
+  .level-btn:hover { opacity: 0.8; }
+  .level-btn.active { opacity: 1; border-color: var(--leaf); background: var(--moss-light); }
+  .level-btn:focus-visible { outline: 3px solid var(--sun); outline-offset: 1px; opacity: 1; }
+
+  /* ─── FARBEN & BERICHTSKARTEN ─── */
+  #colorGrid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem; margin-bottom: 1.2rem;
+  }
+
+  .farb-swatch {
+    border: none; border-radius: 10px; padding: 0.95rem 0.5rem;
+    font-family: inherit; font-size: 1.05rem; font-weight: 700;
+    cursor: pointer; transition: transform 0.1s ease;
+  }
+  .farb-swatch:hover { transform: scale(1.05); }
+
+  .farb-dot {
+    display: inline-block; width: 14px; height: 14px;
+    border-radius: 50%; flex-shrink: 0;
+    border: 1px solid rgba(0,0,0,0.15);
+  }
+
+  .schueler-card .farb-label {
+    font-size: 0.75rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    margin-top: 0.15rem;
+  }
+
+  .berichte-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1rem;
+  }
+
+  .bericht-card {
+    border: 4px solid; border-radius: 14px; overflow: hidden;
+    background: white; box-shadow: 0 2px 12px var(--shadow);
+    break-inside: avoid; page-break-inside: avoid;
+  }
+
+  .bericht-head {
+    padding: 0.8rem 1.1rem;
+    display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
+  }
+
+  .bericht-name { font-family: 'DM Serif Display', serif; font-size: 1.5rem; }
+  .bericht-farbe {
+    font-size: 0.9rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+
+  .bericht-body { padding: 0.9rem 1.1rem 1.1rem; }
+
+  .bericht-block-label {
+    font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--text-light); margin: 0.7rem 0 0.25rem;
+  }
+  .bericht-block-label:first-child { margin-top: 0; }
+
+  .bericht-task {
+    font-size: 1.25rem; font-weight: 700; line-height: 1.45;
+    padding: 0.3rem 0; display: flex; gap: 0.55rem; align-items: baseline;
+    color: var(--text);
+  }
+  .bericht-task.offen { opacity: 0.45; font-weight: 500; }
+  .bericht-task .tick { flex-shrink: 0; }
+
+  /* Sichtbarer Tastatur-Fokus */
+  .schueler-card:focus-visible, .student-group-header:focus-visible,
+  .tab:focus-visible, .btn:focus-visible, .modal-task-btn:focus-visible {
+    outline: 3px solid var(--sun); outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
 </style>
 </head>
 <body>
@@ -345,10 +438,11 @@
   <span class="date-display" id="dateDisplay"></span>
 </header>
 
-<div class="tabs">
-  <button class="tab active" data-view="aufgaben">📋 Aufgaben</button>
-  <button class="tab" data-view="tagesplan">📅 Tagesplan</button>
-  <button class="tab" data-view="admin">⚙️ Verwaltung</button>
+<div class="tabs" role="tablist" aria-label="Bereiche">
+  <button class="tab active" role="tab" aria-selected="true" data-view="aufgaben">📋 Aufgaben</button>
+  <button class="tab" role="tab" aria-selected="false" data-view="tagesplan">📅 Tagesplan</button>
+  <button class="tab" role="tab" aria-selected="false" data-view="berichte">📇 Berichte</button>
+  <button class="tab" role="tab" aria-selected="false" data-view="admin">⚙️ Verwaltung</button>
 </div>
 
 <main>
@@ -406,6 +500,15 @@
     </div>
   </div>
 
+  <!-- ═══ BERICHTE ═══ -->
+  <div class="view" id="view-berichte">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:0.8rem;">
+      <h2 class="card-title" style="font-size:1.4rem;">📇 Berichtskarten</h2>
+      <button class="btn btn-secondary btn-small" onclick="window.print()">🖨️ Drucken</button>
+    </div>
+    <div class="berichte-grid" id="berichteContent"></div>
+  </div>
+
   <!-- ═══ ADMIN ═══ -->
   <div class="view" id="view-admin">
     <div class="card">
@@ -417,6 +520,10 @@
         <button class="btn btn-primary" onclick="exportDaySummary()">📝 Tagesbericht exportieren</button>
         <button class="btn btn-danger" onclick="clearDay()">🗑️ Heutigen Tag zurücksetzen</button>
       </div>
+      <p style="color:var(--text-light);font-size:0.85rem;margin-top:-0.4rem;margin-bottom:1rem;">
+        💾 Alle Daten bleiben ausschließlich auf diesem Gerät (Browser-Speicher) — nichts wird ins Internet übertragen.
+        Achtung: Wird der Browser-Verlauf/Cache gelöscht, sind die Daten weg. Regelmäßig „Daten sichern" nutzen!
+      </p>
       <h3 style="margin:1.2rem 0 0.6rem;font-family:'DM Serif Display',serif;font-size:1.1rem;">Aufgaben bearbeiten</h3>
       <p style="color:var(--text-light);font-size:0.9rem;margin-bottom:0.8rem;">Aufgaben hinzufügen, umbenennen oder entfernen.</p>
       <div style="display:flex;gap:0.4rem;margin-bottom:1rem;">
@@ -431,7 +538,7 @@
 </main>
 
 <!-- ═══ ASSIGN MODAL ═══ -->
-<div class="modal-overlay" id="assignModal">
+<div class="modal-overlay" id="assignModal" role="dialog" aria-modal="true" aria-labelledby="assignModalTitle">
   <div class="modal">
     <h3 id="assignModalTitle"></h3>
     <div class="modal-subtitle">Aufgabe auswählen:</div>
@@ -445,15 +552,25 @@
 </div>
 
 <!-- ═══ BLOCK PICKER ═══ -->
-<div class="modal-overlay" id="blockPickerModal">
+<div class="modal-overlay" id="blockPickerModal" role="dialog" aria-modal="true" aria-labelledby="blockPickerTitle">
   <div class="modal" style="max-width:420px;">
     <h3 id="blockPickerTitle"></h3>
     <div id="blockPickerContent"></div>
   </div>
 </div>
 
+<!-- ═══ FARBWAHL ═══ -->
+<div class="modal-overlay" id="colorModal" role="dialog" aria-modal="true" aria-labelledby="colorModalTitle">
+  <div class="modal" style="max-width:460px;">
+    <h3 id="colorModalTitle"></h3>
+    <div class="modal-subtitle">Jede Farbe gibt es nur einmal pro Tag.</div>
+    <div id="colorGrid"></div>
+    <div id="colorModalFooter" style="display:flex;gap:0.5rem;flex-wrap:wrap;"></div>
+  </div>
+</div>
+
 <!-- ═══ BLOCK QUERY ═══ -->
-<div class="modal-overlay" id="blockModal">
+<div class="modal-overlay" id="blockModal" role="dialog" aria-modal="true" aria-labelledby="blockModalTitle">
   <div class="modal" style="max-width:600px;">
     <h3 id="blockModalTitle"></h3>
     <div id="blockModalContent"></div>
@@ -485,6 +602,37 @@ const DEFAULT_TASKS = [
   "Neue Erde auf ein Beet"
 ];
 
+const FARBEN = [
+  { id:'rot',        name:'Rot',        hex:'#d32f2f' },
+  { id:'orange',     name:'Orange',     hex:'#ef6c00' },
+  { id:'gelb',       name:'Gelb',       hex:'#f4b400', dark:true },
+  { id:'hellgruen',  name:'Hellgrün',   hex:'#7cb342', dark:true },
+  { id:'gruen',      name:'Grün',       hex:'#2e7d32' },
+  { id:'tuerkis',    name:'Türkis',     hex:'#00838f' },
+  { id:'himmelblau', name:'Himmelblau', hex:'#29b6f6', dark:true },
+  { id:'blau',       name:'Blau',       hex:'#1565c0' },
+  { id:'dunkelblau', name:'Dunkelblau', hex:'#283593' },
+  { id:'lila',       name:'Lila',       hex:'#7b1fa2' },
+  { id:'rosa',       name:'Rosa',       hex:'#d81b60' },
+  { id:'braun',      name:'Braun',      hex:'#6d4c41' },
+  { id:'olive',      name:'Olive',      hex:'#827717' },
+  { id:'grau',       name:'Grau',       hex:'#546e7a' },
+  { id:'schwarz',    name:'Schwarz',    hex:'#263238' }
+];
+const FARBE_NEUTRAL = { id:null, name:'', hex:'#9aa5a0' };
+
+const LEVELS = {
+  1: { icon: '🌱', name: 'Sämling' },
+  2: { icon: '🌿', name: 'Pflanze' },
+  3: { icon: '🌳', name: 'Baum' }
+};
+function levelBadge(level) {
+  const l = LEVELS[level];
+  return l ? `<span class="level-badge" title="Schwierigkeit: ${l.name}" aria-label="Schwierigkeit: ${l.name}">${l.icon}</span>` : '';
+}
+function taskLevel(taskId) { const t = state.tasks.find(t => t.id === taskId); return t ? t.level : null; }
+function farbeVon(name) { return FARBEN.find(f => f.id === state.farben[name]) || FARBE_NEUTRAL; }
+
 const BLOCKS = [
   { nr: 1, start: "08:00", end: "09:30" },
   { nr: 2, start: "10:00", end: "11:30" },
@@ -498,27 +646,35 @@ function defaultState() {
   return {
     tasks: DEFAULT_TASKS.map((name, i) => ({ id: i + 1, name, assignees: [] })),
     schueler: [],
+    farben: {},
     nextTaskId: DEFAULT_TASKS.length + 1
   };
 }
 
 function loadState() {
-  try { const s = localStorage.getItem('praxistag-gartenbau'); if (s) return JSON.parse(s); } catch(e) {}
+  try {
+    const s = localStorage.getItem('praxistag-gartenbau');
+    if (s) { const st = JSON.parse(s); if (!st.farben) st.farben = {}; return st; }
+  } catch(e) {}
   return defaultState();
 }
 
 function saveState() { localStorage.setItem('praxistag-gartenbau', JSON.stringify(state)); }
 
-function esc(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+function esc(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML.replace(/"/g, '&quot;'); }
+
+// Macht Namen sicher für Inline-Handler (O'Brien, D'Angelo & Co. zerschießen sonst das onclick)
+function qa(str) { return String(str).replace(/\\/g,'\\u005c').replace(/'/g,'\\u0027').replace(/"/g,'\\u0022').replace(/&/g,'\\u0026').replace(/</g,'\\u003c').replace(/>/g,'\\u003e'); }
 
 // ─── TABS ───
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected','false'); });
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    tab.classList.add('active');
+    tab.classList.add('active'); tab.setAttribute('aria-selected','true');
     document.getElementById('view-' + tab.dataset.view).classList.add('active');
     if (tab.dataset.view === 'tagesplan') refreshTagesplan();
+    if (tab.dataset.view === 'berichte') renderBerichte();
     if (tab.dataset.view === 'admin') renderAdminTasks();
   });
 });
@@ -533,18 +689,90 @@ document.querySelectorAll('.tab').forEach(tab => {
 // SCHÜLER
 // ═══════════════════════════════════════
 
+let pendingStudent = null;
+let pickerMode = 'add'; // 'add' = neue*r Schüler*in, 'recolor' = zweite Chance
+
 function addSchueler() {
   const input = document.getElementById('schuelerInput');
   const name = input.value.trim();
-  if (!name || state.schueler.includes(name)) { input.value = ''; return; }
+  if (!name || state.schueler.some(s => s.toLowerCase() === name.toLowerCase())) { input.value = ''; return; }
+  pendingStudent = name;
+  pickerMode = 'add';
+  openColorPicker();
+}
+
+// Klick auf einen Namen: ohne Farbe -> erst fragen, sonst direkt zu den Aufgaben
+function handleStudentClick(name) {
+  if (!state.farben[name]) {
+    pendingStudent = name;
+    pickerMode = 'recolor';
+    openColorPicker();
+  } else {
+    openAssignModal(name);
+  }
+}
+
+function openColorPicker() {
+  const taken = new Set(Object.values(state.farben));
+  const free = FARBEN.filter(f => !taken.has(f.id));
+
+  document.getElementById('colorModalTitle').textContent =
+    pickerMode === 'recolor'
+      ? `${pendingStudent} hat noch keine Farbe!`
+      : `Farbe für ${pendingStudent} wählen`;
+
+  const grid = document.getElementById('colorGrid');
+  grid.innerHTML = free.length === 0
+    ? '<p style="color:var(--text-light);grid-column:1/-1;">Alle Farben sind heute schon vergeben.</p>'
+    : free.map(f =>
+        `<button class="farb-swatch" style="background:${f.hex};color:${f.dark ? '#1a1a1a' : '#fff'};" onclick="confirmColor('${f.id}')">${f.name}</button>`
+      ).join('');
+
+  document.getElementById('colorModalFooter').innerHTML =
+    pickerMode === 'recolor'
+      ? `<button class="btn btn-secondary" onclick="skipColor()">Später — weiter zu den Aufgaben</button>`
+      : `<button class="btn btn-secondary" onclick="confirmColor(null)">Ohne Farbe</button>
+         <button class="btn btn-secondary" onclick="cancelColor()">Abbrechen</button>`;
+
+  document.getElementById('colorModal').classList.add('show');
+}
+
+function confirmColor(colorId) {
+  if (!pendingStudent) return;
+  const name = pendingStudent;
+  pendingStudent = null;
+
+  if (pickerMode === 'recolor') {
+    if (colorId) state.farben[name] = colorId;
+    closeColorModal();
+    saveState(); renderSchueler(); renderTasks();
+    openAssignModal(name);
+    return;
+  }
+
   state.schueler.push(name);
+  if (colorId) state.farben[name] = colorId;
+  const input = document.getElementById('schuelerInput');
   input.value = '';
+  closeColorModal();
   saveState(); renderSchueler(); renderTasks(); input.focus();
 }
 
+function skipColor() {
+  const name = pendingStudent;
+  pendingStudent = null;
+  closeColorModal();
+  if (name) openAssignModal(name);
+}
+
+function cancelColor() { pendingStudent = null; closeColorModal(); }
+function closeColorModal() { document.getElementById('colorModal').classList.remove('show'); }
+
 function removeSchueler(name, evt) {
   evt.stopPropagation();
+  if (!confirm(`${name} wirklich entfernen? Alle Zuweisungen gehen verloren.`)) return;
   state.schueler = state.schueler.filter(s => s !== name);
+  delete state.farben[name];
   state.tasks.forEach(t => { t.assignees = t.assignees.filter(a => a.name !== name); });
   saveState(); renderSchueler(); renderTasks();
 }
@@ -561,9 +789,15 @@ function renderSchueler() {
   }
   grid.innerHTML = state.schueler.map(name => {
     const c = studentTaskCount(name);
-    return `<div class="schueler-card${c > 0 ? ' has-tasks' : ''}" onclick="openAssignModal('${esc(name)}')">
-      <button class="remove-student" onclick="removeSchueler('${esc(name)}', event)" title="Entfernen">&times;</button>
+    const f = farbeVon(name);
+    const farbStyle = f.id ? ` style="border-color:${f.hex};background:${f.hex}1a;"` : '';
+    return `<div class="schueler-card${c > 0 ? ' has-tasks' : ''}"${farbStyle} role="button" tabindex="0"
+         aria-label="${esc(name)}: Aufgaben zuweisen"
+         onclick="handleStudentClick('${qa(name)}')"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();handleStudentClick('${qa(name)}')}">
+      <button class="remove-student" onclick="removeSchueler('${qa(name)}', event)" title="Entfernen" aria-label="${esc(name)} entfernen">&times;</button>
       <div class="name">${esc(name)}</div>
+      ${f.id ? `<div class="farb-label" style="color:${f.hex};">${f.name}</div>` : ''}
       <div class="task-count">${c === 0 ? 'Keine Aufgaben' : c + ' Aufgabe' + (c > 1 ? 'n' : '')}</div>
     </div>`;
   }).join('');
@@ -580,9 +814,11 @@ function renderTasks() {
   counter.textContent = `${assigned}/${state.tasks.length} zugewiesen`;
 
   tbody.innerHTML = state.tasks.map(task => {
-    const chips = task.assignees.map(a =>
-      `<span class="assign-chip">${esc(a.name)}<span class="remove" onclick="unassign(${task.id},'${esc(a.name)}')">&times;</span></span>`
-    ).join('');
+    const chips = task.assignees.map(a => {
+      const f = farbeVon(a.name);
+      const chipStyle = f.id ? ` style="background:${f.hex};color:${f.dark ? '#1a1a1a' : '#fff'};"` : '';
+      return `<span class="assign-chip"${chipStyle}>${esc(a.name)}<span class="remove" onclick="unassign(${task.id},'${qa(a.name)}')">&times;</span></span>`;
+    }).join('');
 
     const sc = task.assignees.length === 0 ? 'offen'
       : task.assignees.every(a => a.status === 'fertig') ? 'fertig'
@@ -591,7 +827,7 @@ function renderTasks() {
 
     return `<tr>
       <td class="task-nr">${task.id}</td>
-      <td class="task-name">${esc(task.name)}</td>
+      <td class="task-name">${esc(task.name)}${levelBadge(task.level)}</td>
       <td>${chips || '<span style="color:var(--text-light);font-size:0.85rem;">—</span>'}</td>
       <td><span class="status-badge status-${sc}">${sl}</span></td>
     </tr>`;
@@ -625,8 +861,8 @@ function openAssignModal(name) {
         `<span class="block-mini" data-b="${b}">B${b}</span>`
       ).join('');
       return `<div class="ca-item">
-        <span>${esc(task.name)} ${blockBadges}</span>
-        <button class="btn btn-danger btn-small" style="padding:0.2rem 0.5rem;font-size:0.75rem;" onclick="unassignFromModal(${task.id},'${esc(name)}')">Entfernen</button>
+        <span>${esc(task.name)}${levelBadge(task.level)} ${blockBadges}</span>
+        <button class="btn btn-danger btn-small" style="padding:0.2rem 0.5rem;font-size:0.75rem;" onclick="unassignFromModal(${task.id},'${qa(name)}')">Entfernen</button>
       </div>`;
     }).join('');
   } else {
@@ -641,7 +877,7 @@ function openAssignModal(name) {
   } else {
     list.innerHTML = available.map(t =>
       `<button class="modal-task-btn" onclick="pickTask(${t.id})">
-        <span class="nr-badge">${t.id}</span><span>${esc(t.name)}</span>
+        <span class="nr-badge">${t.id}</span><span>${esc(t.name)}${levelBadge(t.level)}</span>
       </button>`
     ).join('');
   }
@@ -665,7 +901,7 @@ function pickTask(taskId) {
     </div>
     <div style="display:flex;gap:0.5rem;">
       <button class="btn btn-primary" onclick="confirmAssign(${taskId})">Zuweisen</button>
-      <button class="btn btn-secondary" onclick="closeBlockPicker();openAssignModal('${esc(currentStudent)}')">Zurück</button>
+      <button class="btn btn-secondary" onclick="closeBlockPicker();openAssignModal('${qa(currentStudent)}')">Zurück</button>
     </div>`;
   document.getElementById('blockPickerModal').classList.add('show');
 }
@@ -744,17 +980,17 @@ function refreshTagesplan() {
               const st = t.status === 'fertig' ? 'Fertig' : t.status === 'aktiv' ? 'Aktiv' : 'Offen';
               const nextB = block.nr < 3 ? block.nr + 1 : null;
               const weiterBtn = nextB && t.status !== 'fertig'
-                ? `<button class="btn btn-secondary btn-small" onclick="moveNext(${t.taskId},'${esc(name)}',${block.nr},${nextB});refreshTagesplan()">→ Weiter</button>` : '';
+                ? `<button class="btn btn-secondary btn-small" onclick="moveNext(${t.taskId},'${qa(name)}',${block.nr},${nextB});refreshTagesplan()">→ Weiter</button>` : '';
               return `<div class="sg-task-card" data-block="${block.nr}">
                 <div>
-                  <span class="sg-task-name">${esc(t.taskName)}</span>
+                  <span class="sg-task-name">${esc(t.taskName)}${levelBadge(taskLevel(t.taskId))}</span>
                   <span class="status-badge status-${sc}" style="margin-left:0.5rem;">${si} ${st}</span>
                 </div>
                 <div class="sg-task-actions">
                   ${t.status === 'fertig'
-                    ? `<button class="btn btn-secondary btn-small" onclick="setStatus(${t.taskId},'${esc(name)}','offen');refreshTagesplan()">↩ Zurück</button>`
-                    : `<button class="btn btn-primary btn-small" onclick="setStatus(${t.taskId},'${esc(name)}','aktiv');refreshTagesplan()">▶</button>
-                       <button class="btn btn-secondary btn-small" onclick="setStatus(${t.taskId},'${esc(name)}','fertig');refreshTagesplan()">✓</button>
+                    ? `<button class="btn btn-secondary btn-small" onclick="setStatus(${t.taskId},'${qa(name)}','offen');refreshTagesplan()">↩ Zurück</button>`
+                    : `<button class="btn btn-primary btn-small" onclick="setStatus(${t.taskId},'${qa(name)}','aktiv');refreshTagesplan()">▶</button>
+                       <button class="btn btn-secondary btn-small" onclick="setStatus(${t.taskId},'${qa(name)}','fertig');refreshTagesplan()">✓</button>
                        ${weiterBtn}`}
                 </div>
               </div>`;
@@ -763,9 +999,12 @@ function refreshTagesplan() {
       });
 
       return `<div class="student-group">
-        <div class="student-group-header" onclick="toggleStudent('${esc(name)}')">
+        <div class="student-group-header" role="button" tabindex="0" aria-expanded="${isOpen}"
+             onclick="toggleStudent('${qa(name)}')"
+             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleStudent('${qa(name)}')}">
           <div class="sg-left">
             <span class="sg-arrow${isOpen ? ' open' : ''}">▶</span>
+            <span class="farb-dot" style="background:${farbeVon(name).hex};"></span>
             <span class="sg-name">${esc(name)}</span>
           </div>
           <span class="sg-summary">${doneTasks}/${totalTasks} erledigt</span>
@@ -828,11 +1067,11 @@ function blockAbfrage(blockNr) {
   } else {
     content.innerHTML = entries.map(e => {
       const weiterBtn = nextB
-        ? `<button class="btn btn-secondary btn-small" onclick="bqMove(${e.taskId},'${esc(e.student)}',${blockNr},${nextB})">→ Weiter</button>` : '';
+        ? `<button class="btn btn-secondary btn-small" onclick="bqMove(${e.taskId},'${qa(e.student)}',${blockNr},${nextB})">→ Weiter</button>` : '';
       return `<div style="display:flex;align-items:center;justify-content:space-between;padding:0.7rem 0;border-bottom:1px solid var(--moss-light);">
-        <div><strong>${esc(e.student)}</strong> <span style="color:var(--text-light);font-size:0.9rem;">– ${esc(e.task)}</span></div>
+        <div><span class="farb-dot" style="background:${farbeVon(e.student).hex};vertical-align:middle;margin-right:0.4rem;"></span><strong>${esc(e.student)}</strong> <span style="color:var(--text-light);font-size:0.9rem;">– ${esc(e.task)}${levelBadge(taskLevel(e.taskId))}</span></div>
         <div style="display:flex;gap:0.3rem;">
-          <button class="btn btn-primary btn-small" onclick="bqDone(${e.taskId},'${esc(e.student)}',${blockNr})">✓ Fertig</button>
+          <button class="btn btn-primary btn-small" onclick="bqDone(${e.taskId},'${qa(e.student)}',${blockNr})">✓ Fertig</button>
           ${weiterBtn}
         </div>
       </div>`;
@@ -842,9 +1081,51 @@ function blockAbfrage(blockNr) {
   document.getElementById('blockModal').classList.add('show');
 }
 
-function bqDone(taskId, name, blockNr) { setStatus(taskId, name, 'fertig'); saveState(); blockAbfrage(blockNr); refreshTagesplan(); }
-function bqMove(taskId, name, curBlock, nextBlock) { moveNext(taskId, name, curBlock, nextBlock); saveState(); blockAbfrage(curBlock); refreshTagesplan(); }
+function bqDone(taskId, name, blockNr) { setStatus(taskId, name, 'fertig'); blockAbfrage(blockNr); refreshTagesplan(); }
+function bqMove(taskId, name, curBlock, nextBlock) { moveNext(taskId, name, curBlock, nextBlock); blockAbfrage(curBlock); refreshTagesplan(); }
 function closeBlockModal() { document.getElementById('blockModal').classList.remove('show'); }
+
+// ═══════════════════════════════════════
+// BERICHTSKARTEN
+// ═══════════════════════════════════════
+
+function renderBerichte() {
+  const container = document.getElementById('berichteContent');
+  if (state.schueler.length === 0) {
+    container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-light);">Noch keine Schüler*innen eingetragen.</div>';
+    return;
+  }
+  const schedule = getStudentSchedule();
+  container.innerHTML = state.schueler.map(name => {
+    const f = farbeVon(name);
+    const s = schedule[name] || { 1: [], 2: [], 3: [] };
+    const total = s[1].length + s[2].length + s[3].length;
+    const textColor = f.dark ? '#1a1a1a' : '#fff';
+
+    let body = '';
+    if (total === 0) {
+      body = '<p style="color:var(--text-light);padding:0.5rem 0;">Keine Aufgaben heute.</p>';
+    } else {
+      BLOCKS.forEach(block => {
+        const tasks = s[block.nr];
+        if (tasks.length === 0) return;
+        body += `<div class="bericht-block-label">Block ${block.nr} · ${block.start} – ${block.end}</div>`;
+        body += tasks.map(t => {
+          const tick = t.status === 'fertig' ? '✓' : t.status === 'aktiv' ? '▶' : '○';
+          return `<div class="bericht-task${t.status === 'fertig' ? '' : ' offen'}"><span class="tick">${tick}</span><span>${esc(t.taskName)}</span></div>`;
+        }).join('');
+      });
+    }
+
+    return `<div class="bericht-card" style="border-color:${f.hex};">
+      <div class="bericht-head" style="background:${f.hex};color:${textColor};">
+        <span class="bericht-name">${esc(name)}</span>
+        ${f.id ? `<span class="bericht-farbe">${f.name}</span>` : ''}
+      </div>
+      <div class="bericht-body">${body}</div>
+    </div>`;
+  }).join('');
+}
 
 // ═══════════════════════════════════════
 // ADMIN
@@ -857,6 +1138,13 @@ function renderAdminTasks() {
       <input type="text" value="${esc(t.name)}"
              style="flex:1;padding:0.4rem 0.7rem;border:1px solid var(--moss-light);border-radius:6px;font-family:inherit;font-size:0.95rem;"
              onchange="renameTask(${t.id},this.value)">
+      <div class="level-select" role="group" aria-label="Schwierigkeit für ${esc(t.name)}">
+        ${[1,2,3].map(l =>
+          `<button class="level-btn${t.level === l ? ' active' : ''}" onclick="setLevel(${t.id},${l})"
+                   title="${LEVELS[l].name}${t.level === l ? ' — nochmal tippen zum Entfernen' : ''}"
+                   aria-pressed="${t.level === l}">${LEVELS[l].icon}</button>`
+        ).join('')}
+      </div>
       <button class="btn btn-danger btn-small btn-icon" onclick="deleteTask(${t.id})" title="Löschen">✕</button>
     </div>`
   ).join('');
@@ -870,10 +1158,17 @@ function addTask() {
   input.value = ''; saveState(); renderAdminTasks(); renderTasks();
 }
 
+function setLevel(id, lvl) {
+  const t = state.tasks.find(t => t.id === id);
+  if (!t) return;
+  t.level = (t.level === lvl) ? null : lvl;
+  saveState(); renderAdminTasks(); renderTasks();
+}
+
 function renameTask(id, v) {
   const t = state.tasks.find(t => t.id === id);
-  if (t) t.name = v.trim();
-  saveState(); renderTasks();
+  if (t && v.trim()) t.name = v.trim();
+  saveState(); renderAdminTasks(); renderTasks();
 }
 
 function deleteTask(id) {
@@ -900,8 +1195,13 @@ function importData(event) {
   reader.onload = (e) => {
     try {
       const imp = JSON.parse(e.target.result);
-      if (imp.tasks) { state = imp; saveState(); renderAll(); alert('Daten erfolgreich importiert!'); }
-      else alert('Ungültiges Dateiformat.');
+      if (Array.isArray(imp.tasks) && Array.isArray(imp.schueler)
+          && imp.tasks.every(t => t && typeof t.name === 'string' && Array.isArray(t.assignees))) {
+        imp.nextTaskId = Math.max(0, ...imp.tasks.map(t => t.id || 0)) + 1;
+        imp.farben = imp.farben || {};
+        state = imp; saveState(); renderAll(); alert('Daten erfolgreich importiert!');
+      }
+      else alert('Ungültiges Dateiformat. Bitte eine zuvor exportierte JSON-Datei wählen.');
     } catch(err) { alert('Fehler beim Import: ' + err.message); }
   };
   reader.readAsText(file); event.target.value = '';
@@ -961,14 +1261,21 @@ function exportDaySummary() {
 function clearDay() {
   if (!confirm('Alle Zuweisungen und Schüler*innen für heute löschen?')) return;
   state.schueler = [];
+  state.farben = {};
   state.tasks.forEach(t => { t.assignees = []; });
   saveState(); renderAll();
 }
 
 function renderAll() { renderSchueler(); renderTasks(); }
 
+// Escape schließt offene Modals
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape')
+    document.querySelectorAll('.modal-overlay.show').forEach(m => m.classList.remove('show'));
+});
+
 // Close modals on background click
-['assignModal', 'blockPickerModal', 'blockModal'].forEach(id => {
+['assignModal', 'blockPickerModal', 'blockModal', 'colorModal'].forEach(id => {
   document.getElementById(id).addEventListener('click', e => {
     if (e.target === document.getElementById(id)) document.getElementById(id).classList.remove('show');
   });
